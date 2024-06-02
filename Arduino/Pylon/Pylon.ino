@@ -57,7 +57,7 @@ void loop() {
     FunkSerial.print("!" + String(ID) + "|alarm");
   }
 
-  Funk();
+  FunkCheck();
   LED_Controler();
 
   if (millis() - checkOnline_timer > 1500) {  //schauen ob Signal von Receiver kommt
@@ -77,7 +77,7 @@ void loop() {
 }
 
 
-void Funk() {
+void FunkCheck() {
   Funk_Input = "";
   boolean data = false;
   while (FunkSerial.available()) {
@@ -85,34 +85,39 @@ void Funk() {
     delay(5);
     if (data == true) {
       if (incomingByte == '!') {
-      	break;
+        Funk(Funk_Input);
+        Funk_Input = "";
       } else Funk_Input += char(incomingByte);
     } else if (incomingByte == '!') {
       data = true;
     }
   }
   if (data == true) {
-    Serial.println(Funk_Input);
-    if (Funk_Input == String(ID) + "|an") {  // Scharf schalten
-      sensors_event_t a, g, temp;
-      mpu.getEvent(&a, &g, &temp);
-      acc_x = a.acceleration.x;
-      acc_y = a.acceleration.y;
-      acc_z = a.acceleration.z;
-      FunkSerial.print("!" + String(ID) + "|an|OK");
-      scharf = true;
-    } else if (Funk_Input == String(ID) + "|aus") {  // Entschärfen
-      FunkSerial.print("!" + String(ID) + "|aus|OK");
-      scharf = false;
-    } else if (Funk_Input == String(ID) + "|off") {  // Alarm deaktivieren
-      FunkSerial.print("!" + String(ID) + "|off|OK");
-      alarm = false;
-      send_alarm = false;
-    } else if (Funk_Input == String(ID) + "|stop") {  // Alarm sender deaktivieren
-      send_alarm = false;
-    } else if (Funk_Input == "0") {  // Online Status
-      online++;
-    }
+    Funk(Funk_Input);
+  }
+}
+
+void Funk(String input) {
+  Serial.println(input);
+  if (input == String(ID) + "|an") {  // Scharf schalten
+    sensors_event_t a, g, temp;
+    mpu.getEvent(&a, &g, &temp);
+    acc_x = a.acceleration.x;
+    acc_y = a.acceleration.y;
+    acc_z = a.acceleration.z;
+    FunkSerial.print("!" + String(ID) + "|an|OK");
+    scharf = true;
+  } else if (input == String(ID) + "|aus") {  // Entschärfen
+    FunkSerial.print("!" + String(ID) + "|aus|OK");
+    scharf = false;
+  } else if (input == String(ID) + "|off") {  // Alarm deaktivieren
+    FunkSerial.print("!" + String(ID) + "|off|OK");
+    alarm = false;
+    send_alarm = false;
+  } else if (input == String(ID) + "|stop") {  // Alarm sender deaktivieren
+    send_alarm = false;
+  } else if (input == "0") {  // Online Status
+    online++;
   }
 }
 

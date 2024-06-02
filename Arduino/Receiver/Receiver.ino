@@ -37,8 +37,8 @@ void loop() {
     Serial.write("Alarm");
   }
 
-  Funk();
-  Bluetooth();
+  FunkCheck();
+  BluetoothCheck();
   LED_Controler();
 
   if (millis() - sendOnline_timer > 1000) {  //alle 1s eigenes Signal senden
@@ -47,7 +47,7 @@ void loop() {
   }
 }
 
-void Bluetooth() {
+void BluetoothCheck() {
   BT_Input = "";
   boolean BT_data = false;
   while (Serial.available()) {
@@ -55,33 +55,38 @@ void Bluetooth() {
     delay(5);
     if (BT_data == true) {
       if (incomingByte == '!') {
-      	break;
+      	Bluetooth(BT_Input);
+        BT_Input = "";
       } else BT_Input += char(incomingByte);
     } else if (incomingByte == '!') {
       BT_data = true;
     }
   }
   if (BT_data == true) {
-    if (BT_Input == "0|devices") {
-      String msg = "D:" + String(connected[0]) + ":" + connected[1] + ":" + connected[2] + ":" + connected[3] + ":" + connected[4] + ":" + connected[5] + ":" + connected[6] + ":" + connected[7];
-      Serial.print(msg);
-    } else if (BT_Input == "0|aus") {
-      for (int i = 0; i < 8; i++) {
-        if (connected[i] == 5) {
-          FunkSerial.print("!" + String(i+1) + "|off");
-        }
-      }
-    } else if (BT_Input == "0|stop") {
-      send_alarm = false;
-    } else if (BT_Input.indexOf("an") > 0 && connected[BT_Input.substring(0, 1).toInt() - 1] != 0) {
-      FunkSerial.print("!" + BT_Input.substring(0, 1) + "|an");
-    } else if (BT_Input.indexOf("aus") > 0 && connected[BT_Input.substring(0, 1).toInt() - 1] != 0) {
-      FunkSerial.print("!" + BT_Input.substring(0, 1) + "|aus");
-    }
+    Bluetooth(BT_Input);
   }
 }
 
-void Funk() {
+void Bluetooth(String input) {
+  if (input == "0|devices") {
+    String msg = "D:" + String(connected[0]) + ":" + connected[1] + ":" + connected[2] + ":" + connected[3] + ":" + connected[4] + ":" + connected[5] + ":" + connected[6] + ":" + connected[7];
+    Serial.print(msg);
+  } else if (input == "0|aus") {
+    for (int i = 0; i < 8; i++) {
+      if (connected[i] == 5) {
+        FunkSerial.print("!" + String(i+1) + "|off");
+      }
+    }
+  } else if (input == "0|stop") {
+    send_alarm = false;
+  } else if (input.indexOf("an") > 0 && connected[input.substring(0, 1).toInt() - 1] != 0) {
+    FunkSerial.print("!" + input.substring(0, 1) + "|an");
+  } else if (input.indexOf("aus") > 0 && connected[input.substring(0, 1).toInt() - 1] != 0) {
+    FunkSerial.print("!" + input.substring(0, 1) + "|aus");
+  }
+}
+
+void FunkCheck() {
   Funk_Input = "";
   boolean Funk_data = false;
   while (FunkSerial.available()) {
@@ -89,55 +94,15 @@ void Funk() {
     delay(5);
     if (Funk_data == true) {
       if (incomingByte == '!') {
-      	break;
+      	Funk(Funk_Input);
+        Funk_Input = "";
       } else Funk_Input += char(incomingByte);
     } else if (incomingByte == '!') {
       Funk_data = true;
     }
   }
   if (Funk_data == true) {
-    if (Funk_Input.indexOf("|alarm") > 0) {
-      FunkSerial.print("!" + Funk_Input.substring(0, 1) + "|stop");
-      connected[Funk_Input.substring(0, 1).toInt() - 1] = 5;
-      alarm = true;
-      if (!send_alarm) {
-        send_alarm = true;
-        Serial.write("Alarm");
-        sendAlarm_timer = millis();
-      }
-    } else if (Funk_Input.indexOf("|off|OK") > 0) {
-      connected[Funk_Input.substring(0, 1).toInt() - 1] = 1;
-      Serial.print(Funk_Input.substring(0, 1) + "|off|OK");
-      bool test = false;
-      for (int i = 0; i < 8; i++) {
-        if (connected[i] == 5) {
-          test = true;
-        }
-      }
-      if(!test) {
-        alarm = false;
-        send_alarm = false;
-      }
-    } else if (isDigit(Funk_Input.charAt(0))) {
-      FunkRead[Funk_Input.toInt() - 1]++;
-    }
-    if (Funk_Input.indexOf("|an|OK") > 0) {
-      if (connected[Funk_Input.substring(0, 1).toInt() - 1] == 3) {  // Wenn Online mit Verbindungsproblem
-        connected[Funk_Input.substring(0, 1).toInt() - 1] = 4;       // -> Scharf schalten mit Verbindungsproblem
-        Serial.print(Funk_Input.substring(0, 1) + "|an|OK|P");
-      } else {                                                  // Wenn Online
-        connected[Funk_Input.substring(0, 1).toInt() - 1] = 2;  // -> Scharf schalten
-        Serial.print(Funk_Input.substring(0, 1) + "|an|OK");
-      }
-    } else if (Funk_Input.indexOf("|aus|OK") > 0) {
-      if (connected[Funk_Input.substring(0, 1).toInt() - 1] == 4) {  // Wenn Scharf mit Verbindungsproblem
-        connected[Funk_Input.substring(0, 1).toInt() - 1] = 3;       // -> Online mit Verbindungsproblem
-        Serial.print(Funk_Input.substring(0, 1) + "|aus|OK|P");
-      } else {                                                  // Wenn Scharf
-        connected[Funk_Input.substring(0, 1).toInt() - 1] = 1;  // -> Online
-        Serial.print(Funk_Input.substring(0, 1) + "|aus|OK");
-      }
-    }
+    Funk(Funk_Input);
   }
 
   if (millis() - checkOnline_timer > 2500) {  //alle 2.5s schauen wie oft Funk Verbindung da war
@@ -170,6 +135,51 @@ void Funk() {
     if (changed) {
       String msg = "D:" + String(connected[0]) + ":" + connected[1] + ":" + connected[2] + ":" + connected[3] + ":" + connected[4] + ":" + connected[5] + ":" + connected[6] + ":" + connected[7];
       Serial.print(msg);
+    }
+  }
+}
+
+void Funk(String input) {
+  if (input.indexOf("|alarm") > 0) {
+    FunkSerial.print("!" + input.substring(0, 1) + "|stop");
+    connected[input.substring(0, 1).toInt() - 1] = 5;
+    alarm = true;
+    if (!send_alarm) {
+      send_alarm = true;
+      Serial.write("Alarm");
+      sendAlarm_timer = millis();
+    }
+  } else if (input.indexOf("|off|OK") > 0) {
+    connected[input.substring(0, 1).toInt() - 1] = 1;
+    Serial.print(input.substring(0, 1) + "|off|OK");
+    bool test = false;
+    for (int i = 0; i < 8; i++) {
+      if (connected[i] == 5) {
+        test = true;
+      }
+    }
+    if(!test) {
+      alarm = false;
+      send_alarm = false;
+    }
+  } else if (isDigit(input.charAt(0))) {
+    FunkRead[input.toInt() - 1]++;
+  }
+  if (input.indexOf("|an|OK") > 0) {
+    if (connected[input.substring(0, 1).toInt() - 1] == 3) {  // Wenn Online mit Verbindungsproblem
+      connected[input.substring(0, 1).toInt() - 1] = 4;       // -> Scharf schalten mit Verbindungsproblem
+      Serial.print(input.substring(0, 1) + "|an|OK|P");
+    } else {                                                  // Wenn Online
+      connected[input.substring(0, 1).toInt() - 1] = 2;  // -> Scharf schalten
+      Serial.print(input.substring(0, 1) + "|an|OK");
+    }
+  } else if (input.indexOf("|aus|OK") > 0) {
+    if (connected[input.substring(0, 1).toInt() - 1] == 4) {  // Wenn Scharf mit Verbindungsproblem
+      connected[input.substring(0, 1).toInt() - 1] = 3;       // -> Online mit Verbindungsproblem
+      Serial.print(input.substring(0, 1) + "|aus|OK|P");
+    } else {                                                  // Wenn Scharf
+      connected[input.substring(0, 1).toInt() - 1] = 1;  // -> Online
+      Serial.print(input.substring(0, 1) + "|aus|OK");
     }
   }
 }
