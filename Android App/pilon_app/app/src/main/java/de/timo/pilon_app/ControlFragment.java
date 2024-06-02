@@ -161,7 +161,7 @@ public class ControlFragment extends Fragment implements ServiceConnection, Seri
             @Override
             public View getView(int position, View view, @NonNull ViewGroup parent) {
                 Integer state = SerialSocket.active_pilons.get(position);
-                if (view == null) {
+                if (view == null || view.getVisibility() == View.INVISIBLE) {
                     view = getActivity().getLayoutInflater().inflate(R.layout.pilon_item, parent, false);
                 }
 
@@ -173,8 +173,9 @@ public class ControlFragment extends Fragment implements ServiceConnection, Seri
                 String status;
                 String scharf;
                 if (state == 0) {
-                    status = "stabil";
-                    return new View(getContext());
+                    view = new View(getContext());
+                    view.setVisibility(View.INVISIBLE);
+                    return view;
                 } else if (state == 1) {
                     itemImage.setImageResource(R.drawable.online);
                     status = "stabil";
@@ -195,12 +196,12 @@ public class ControlFragment extends Fragment implements ServiceConnection, Seri
                     status = "stabil";
                     scharf = "Nein";
                 }
-                programTitle.setText("Pilon " + (position + 1));//programName[position]
-                programDescription.setText("Beschreibung Pilon " + (position + 1));//programDescription[position]
+                programTitle.setText("Pylon " + (position + 1));//programName[position]
+                programDescription.setText("Beschreibung Pylon " + (position + 1));//programDescription[position]
                 imageButton.setOnClickListener(v -> {
                     AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                     builder.setTitle("Eigenschaften Pilon " + (position + 1) + ":");
-                    builder.setMessage("Name: Pilon " + (position + 1) + "\nStatus: Verbunden" + "\nVerbindung: " + status + "\nScharf geschalten?: " + scharf);
+                    builder.setMessage("Name: Pylon " + (position + 1) + "\nStatus: Verbunden" + "\nVerbindung: " + status + "\nScharf geschalten?: " + scharf);
                     builder.setPositiveButton("OK", (dialog, id) -> {
                         Log.d("Dialog", "Ok");
                     });
@@ -252,7 +253,7 @@ public class ControlFragment extends Fragment implements ServiceConnection, Seri
         disableAlarm.setEnabled(false);
         for (int activePilon : SerialSocket.active_pilons) {
             if (activePilon == 2 || activePilon == 4) {
-                Log.d("sdcfdsaf", "Scharf geschaltenen Pilone alle offline");
+                Log.d("sdcfdsaf", "Scharf geschaltenen Pylone alle offline");
             }
         }
         SerialSocket.active_pilons.clear();

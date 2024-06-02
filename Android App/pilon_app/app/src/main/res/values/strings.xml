@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Pilon App</string>
+    <string name="app_name">Pylon App</string>
     <string name="devices">Bluetooth Geräte</string>
 
     <string name="bluetooth_permission_title">Bluetooth permission</string>

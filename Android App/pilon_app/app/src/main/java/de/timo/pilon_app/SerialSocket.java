@@ -389,81 +389,89 @@ class SerialSocket extends BluetoothGattCallback {
         for (byte[] dataa : datas) {
             String msg = new String(dataa);
             if(msg.equals("Alarm")) {
-                Log.d("Pilon", "ALARM!");
+                send("!0|stop");
+                Log.d("Pylon", "ALARM!");
 
                 SharedPreferences sharedPreferences = context.getSharedPreferences("Settings", Context.MODE_PRIVATE);
-                String path = sharedPreferences.getString("Path", "Standart Ton");
-                int SoundVersion = 0;
-                Uri sound = Uri.parse("android.resource://" + context.getApplicationContext().getPackageName() + "/" + R.raw.sound);
-                if(!path.equals("Standart Ton")) {
-                    SoundVersion = sharedPreferences.getInt("SoundVersion", 1);
-                    sound = Uri.parse(path);
-                }
-                Log.d("Version", String.valueOf(SoundVersion));
-
-                Intent stopAlarmIntent = new Intent()
-                        .setClassName(context, "de.timo.pilon_app.MainActivity")
-                        .setAction(Intent.ACTION_MAIN)
-                        .addCategory(Intent.CATEGORY_LAUNCHER);
-                int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0;
-                PendingIntent stopAlarmPendingIntent = PendingIntent.getActivity(context, 1, stopAlarmIntent,  flags);
-
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context.getApplicationContext(), "default_notification_channel_id" )
-                        .setSmallIcon(R.drawable.ic_notification )
-                        .setContentTitle("Warnung")
-                        .setSound(sound)
-                        .setContentIntent(stopAlarmPendingIntent)
-                        .setDeleteIntent(stopAlarmPendingIntent)
-                        .setContentText("Das Hütchen ist umgefallen!")
-                        .setOngoing(true);
-                NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE );
-
-                AudioManager audioManager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
-                audioManager.setStreamVolume(AudioManager.STREAM_ALARM, sharedPreferences.getInt("Volume", 5), 0); //MAX = 15
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !mNotificationManager.isNotificationPolicyAccessGranted()) {//Get DND Rechte
-                    Intent intent = new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    context.getApplicationContext().startActivity(intent);
-                } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
-                    mNotificationManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL);
-                }
-
-                if (Build.VERSION. SDK_INT >= Build.VERSION_CODES.O ) {
-                    if(SoundVersion != 0 && mNotificationManager.getNotificationChannel("Alarm" + (SoundVersion-1)) != null) {
-                        mNotificationManager.deleteNotificationChannel("Alarm" + (SoundVersion-1));
-                        if(mNotificationManager.getNotificationChannel("Alarm0") != null) {
-                            mNotificationManager.deleteNotificationChannel("Alarm0");
-                        }
+                boolean ton = sharedPreferences.getBoolean("Ton", false);
+                if(ton) {
+                    String path = sharedPreferences.getString("Path", "Standart Ton");
+                    int SoundVersion = 0;
+                    Uri sound = Uri.parse("android.resource://" + context.getApplicationContext().getPackageName() + "/" + R.raw.sound);
+                    if(!path.equals("Standart Ton")) {
+                        SoundVersion = sharedPreferences.getInt("SoundVersion", 1);
+                        sound = Uri.parse(path);
                     }
-                    AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION )
-                            .setUsage(AudioAttributes.USAGE_ALARM )
-                            .build() ;
-                    int importance = NotificationManager. IMPORTANCE_HIGH ;
-                    NotificationChannel notificationChannel = new NotificationChannel( "Alarm" + SoundVersion , "Alarm" , importance) ;
-                    notificationChannel.enableLights( true ) ;
-                    notificationChannel.setLightColor(Color.RED ) ;
-                    notificationChannel.enableVibration( true ) ;
-                    notificationChannel.setVibrationPattern( new long []{ 100 , 200 , 300 , 400 , 500 , 400 , 300 , 200 , 400 }) ;
-                    notificationChannel.setSound(sound, audioAttributes) ;
-                    mBuilder.setChannelId( "Alarm" + SoundVersion ) ;
-                    mNotificationManager.createNotificationChannel(notificationChannel) ;
+                    Log.d("Version", String.valueOf(SoundVersion));
+
+                    Intent stopAlarmIntent = new Intent()
+                            .setClassName(context, "de.timo.pilon_app.MainActivity")
+                            .setAction(Intent.ACTION_MAIN)
+                            .addCategory(Intent.CATEGORY_LAUNCHER);
+                    int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0;
+                    PendingIntent stopAlarmPendingIntent = PendingIntent.getActivity(context, 1, stopAlarmIntent,  flags);
+
+                    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context.getApplicationContext(), "default_notification_channel_id" )
+                            .setSmallIcon(R.drawable.ic_notification )
+                            .setContentTitle("Warnung")
+                            .setSound(sound)
+                            .setContentIntent(stopAlarmPendingIntent)
+                            .setDeleteIntent(stopAlarmPendingIntent)
+                            .setContentText("Das Hütchen ist umgefallen!")
+                            .setAutoCancel(true)
+                            .setOngoing(true);
+                    NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE );
+
+                    AudioManager audioManager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
+                    audioManager.setStreamVolume(AudioManager.STREAM_ALARM, sharedPreferences.getInt("Volume", 5), 0); //MAX = 15
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !mNotificationManager.isNotificationPolicyAccessGranted()) {//Get DND Rechte
+                        Intent intent = new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        context.getApplicationContext().startActivity(intent);
+                    } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+                        mNotificationManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL);
+                    }
+
+                    if (Build.VERSION. SDK_INT >= Build.VERSION_CODES.O ) {
+                        if(SoundVersion != 0 && mNotificationManager.getNotificationChannel("Alarm" + (SoundVersion-1)) != null) {
+                            mNotificationManager.deleteNotificationChannel("Alarm" + (SoundVersion-1));
+                            if(mNotificationManager.getNotificationChannel("Alarm0") != null) {
+                                mNotificationManager.deleteNotificationChannel("Alarm0");
+                            }
+                        }
+                        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                                .setContentType(AudioAttributes.CONTENT_TYPE_UNKNOWN )
+                                .setUsage(AudioAttributes.USAGE_ALARM )
+                                .build() ;
+                        int importance = NotificationManager. IMPORTANCE_HIGH ;
+                        NotificationChannel notificationChannel = new NotificationChannel( "Alarm" + SoundVersion , "Alarm" , importance) ;
+                        notificationChannel.enableLights( true ) ;
+                        notificationChannel.setLightColor(Color.RED ) ;
+                        notificationChannel.enableVibration( true ) ;
+                        notificationChannel.setVibrationPattern( new long []{ 100 , 200 , 300 , 400 , 500 , 400 , 300 , 200 , 400 }) ;
+                        notificationChannel.setSound(sound, audioAttributes) ;
+                        mBuilder.setChannelId( "Alarm" + SoundVersion ) ;
+                        mNotificationManager.createNotificationChannel(notificationChannel) ;
+                    }
+                    assert mNotificationManager != null;
+                    mNotificationManager.notify(1212121212, mBuilder.build());
+                } else {
+                    Toast.makeText(context, "Alarm!!!", Toast.LENGTH_LONG).show();// Alarm
                 }
-                assert mNotificationManager != null;
-                mNotificationManager.notify(1212121212, mBuilder.build());
+
 
             } else if(msg.contains("D:")) {
                 String[] numbers = msg.split(":");
                 if(numbers.length-1 == active_pilons.size()) {
                     for(int i = 1; i<numbers.length; i++) {
                         if(active_pilons.get(i - 1) == 2 && Integer.parseInt(numbers[i]) == 0) {
-                            Toast.makeText(context, "scharf geschaltenes Pilon offline", Toast.LENGTH_SHORT).show(); //Alarm
+                            Toast.makeText(context, "scharf geschaltenes Pylon offline", Toast.LENGTH_SHORT).show(); //Alarm
                         } else if(active_pilons.get(i - 1) == 4 && Integer.parseInt(numbers[i]) == 0) {
-                            Toast.makeText(context, "scharf geschaltenes Pilon mit Problem jetzt offline", Toast.LENGTH_SHORT).show();// Alarm
+                            Toast.makeText(context, "scharf geschaltenes Pylon mit Problem jetzt offline", Toast.LENGTH_SHORT).show();// Alarm
                         } else if(active_pilons.get(i - 1) == 2 && Integer.parseInt(numbers[i]) == 4) {
-                            Toast.makeText(context, "scharf geschaltenes Pilon hat jetzt Verbindungsprobleme", Toast.LENGTH_SHORT).show(); //Info
+                            Toast.makeText(context, "scharf geschaltenes Pylon hat jetzt Verbindungsprobleme", Toast.LENGTH_SHORT).show(); //Info
                         }
                     }
                 }
@@ -482,12 +490,31 @@ class SerialSocket extends BluetoothGattCallback {
                 active_pilons.set(Integer.parseInt(msg.split("\\|")[0]) - 1, 2); // -> |
             } else if(msg.contains("|aus|OK")) {
                 active_pilons.set(Integer.parseInt(msg.split("\\|")[0]) - 1, 1); // -> |
+            } else if(msg.contains("|off|OK")) {
+                active_pilons.set(Integer.parseInt(msg.split("\\|")[0]) - 1, 1); // -> |
+                NotificationManager nMgr = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                nMgr.cancel(1212121212);
             }
         }
 
 
         if (listener != null) listener.onSerialRead(data);
 
+    }
+
+    private void send(String str) {
+        if(!connected) {
+            Toast.makeText(context.getApplicationContext(), "nicht verbunden", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            byte[] data;
+            data = str.getBytes();
+            write(data); //Sende Daten
+            Log.d("SerialSocket", "Sende: " + str);
+        } catch (Exception e) {
+            onSerialIoError(e);
+        }
     }
 
     private void onSerialIoError(Exception e) {

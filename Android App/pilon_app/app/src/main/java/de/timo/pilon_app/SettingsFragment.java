@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -24,6 +25,7 @@ public class SettingsFragment extends Fragment {
 
     TextView filePath;
     String path;
+    Boolean enabled;
     ActivityResultLauncher<Intent> someActivityResultLauncher;
 
     @Override
@@ -50,16 +52,20 @@ public class SettingsFragment extends Fragment {
         Button defaultButton = view.findViewById(R.id.default_sound);
         filePath = view.findViewById(R.id.file_path);
         Button saveButton = view.findViewById(R.id.save);
+        Switch ton = view.findViewById(R.id.switch1);
 
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("Settings", MODE_PRIVATE);
 
         int volume = sharedPreferences.getInt("Volume", 5);
         path = sharedPreferences.getString("Path", "Standart Ton");
+        enabled = sharedPreferences.getBoolean("Ton", true);
         volumeBar.setProgress(volume);
+        ton.setChecked(enabled);
         filePath.setText(path);
 
         saveButton.setOnClickListener(v -> {
             SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean("Ton", ton.isChecked());
             editor.putInt("Volume", volumeBar.getProgress());
             editor.putString("Path", path);
             if(!Objects.equals(path, sharedPreferences.getString("Path", "Standart Ton")) && !Objects.equals(path, "Standart Ton")) {
