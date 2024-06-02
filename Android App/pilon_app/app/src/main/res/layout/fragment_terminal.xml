@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/connectedState"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#EC3C3C"
+        android:gravity="center"
+        android:text="Offline"
+        android:textAlignment="center"
+        android:textAllCaps="false"
+        android:textAppearance="@style/TextAppearance.AppCompat.Display3"
+        android:textColor="#3E2723" />
+
+    <ListView
+        android:id="@+id/pilone"
+        android:layout_width="match_parent"
+        android:layout_height="550dp"
+        android:clickable="true" />
+
+    <Button
+        android:id="@+id/activate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:enabled="false"
+        android:text="Nicht Verbunden" />
+
+    <Button
+        android:id="@+id/stopAlarm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:enabled="false"
+        android:text="Alarm Deaktivieren" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="?android:attr/listDivider" />
+
+</LinearLayout>
+
