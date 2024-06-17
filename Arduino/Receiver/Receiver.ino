@@ -29,6 +29,13 @@ void setup() {
   pinMode(PIN_LED_G, OUTPUT);
   pinMode(PIN_KNOPF, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(PIN_KNOPF), KnopfPressed, RISING);
+  tone(PIN_PIEPER, 523, 100);
+  delay(100);
+  tone(PIN_PIEPER, 659, 100);
+  delay(100);
+  tone(PIN_PIEPER, 784, 100);
+  delay(100);
+  tone(PIN_PIEPER, 1047, 100);
 }
 
 void loop() {
@@ -55,7 +62,7 @@ void BluetoothCheck() {
     delay(5);
     if (BT_data == true) {
       if (incomingByte == '!') {
-      	Bluetooth(BT_Input);
+        Bluetooth(BT_Input);
         BT_Input = "";
       } else BT_Input += char(incomingByte);
     } else if (incomingByte == '!') {
@@ -74,7 +81,7 @@ void Bluetooth(String input) {
   } else if (input == "0|aus") {
     for (int i = 0; i < 8; i++) {
       if (connected[i] == 5) {
-        FunkSerial.print("!" + String(i+1) + "|off");
+        FunkSerial.print("!" + String(i + 1) + "|off");
       }
     }
   } else if (input == "0|stop") {
@@ -94,7 +101,7 @@ void FunkCheck() {
     delay(5);
     if (Funk_data == true) {
       if (incomingByte == '!') {
-      	Funk(Funk_Input);
+        Funk(Funk_Input);
         Funk_Input = "";
       } else Funk_Input += char(incomingByte);
     } else if (incomingByte == '!') {
@@ -107,9 +114,9 @@ void FunkCheck() {
 
   if (millis() - checkOnline_timer > 2500) {  //alle 2.5s schauen wie oft Funk Verbindung da war
     checkOnline_timer = millis();
-    bool changed = false;            //Boolean ob es veränderung zu davorigen Zustand gibt
-    for (int i = 0; i < 8; i++) {    //Auswertung der Funksignale
-      if(connected[i] != 5) {
+    bool changed = false;          //Boolean ob es veränderung zu davorigen Zustand gibt
+    for (int i = 0; i < 8; i++) {  //Auswertung der Funksignale
+      if (connected[i] != 5) {
         int lastState = connected[i];  //Speicherung des letzten Zustands
 
         if (FunkRead[i] == 0) {  // Bei keiner Verbindung
@@ -130,6 +137,16 @@ void FunkCheck() {
         }
         FunkRead[i] = 0;                                // Zurücksetzen des Signal Zählers
         if (lastState != connected[i]) changed = true;  // Boolean ob es veränderung zu davorigen Zustand gibt
+        if (lastState == 0 && lastState != connected[i]) {
+          tone(PIN_PIEPER, 523, 100);
+          delay(100);
+          tone(PIN_PIEPER, 784, 100);
+        }
+        if (lastState != 0 && connected[i] == 0) {
+          tone(PIN_PIEPER, 784, 100);
+          delay(100);
+          tone(PIN_PIEPER, 523, 100);
+        }
       }
     }
     if (changed) {
@@ -158,7 +175,7 @@ void Funk(String input) {
         test = true;
       }
     }
-    if(!test) {
+    if (!test) {
       alarm = false;
       send_alarm = false;
     }
@@ -169,7 +186,7 @@ void Funk(String input) {
     if (connected[input.substring(0, 1).toInt() - 1] == 3) {  // Wenn Online mit Verbindungsproblem
       connected[input.substring(0, 1).toInt() - 1] = 4;       // -> Scharf schalten mit Verbindungsproblem
       Serial.print(input.substring(0, 1) + "|an|OK|P");
-    } else {                                                  // Wenn Online
+    } else {                                             // Wenn Online
       connected[input.substring(0, 1).toInt() - 1] = 2;  // -> Scharf schalten
       Serial.print(input.substring(0, 1) + "|an|OK");
     }
@@ -177,7 +194,7 @@ void Funk(String input) {
     if (connected[input.substring(0, 1).toInt() - 1] == 4) {  // Wenn Scharf mit Verbindungsproblem
       connected[input.substring(0, 1).toInt() - 1] = 3;       // -> Online mit Verbindungsproblem
       Serial.print(input.substring(0, 1) + "|aus|OK|P");
-    } else {                                                  // Wenn Scharf
+    } else {                                             // Wenn Scharf
       connected[input.substring(0, 1).toInt() - 1] = 1;  // -> Online
       Serial.print(input.substring(0, 1) + "|aus|OK");
     }
@@ -199,20 +216,15 @@ void LED_Controler() {
     digitalWrite(PIN_LED_G, LOW);
     if (millis() - led_timer > 1000) {
       led_timer = millis();
-    }
-    if (millis() - led_timer > 250) {
-      digitalWrite(PIN_PIEPER, LOW);
-    } else {
-      analogWrite(PIN_PIEPER, 50);
+      tone(PIN_PIEPER, 2093, 500);
+      //tone(PIN_PIEPER, 1047, 500);
     }
   } else if (scharf) {
     digitalWrite(PIN_LED_R, HIGH);
     analogWrite(PIN_LED_G, 75);
-    digitalWrite(PIN_PIEPER, LOW);
   } else if (verbunden) {
     digitalWrite(PIN_LED_R, LOW);
     digitalWrite(PIN_LED_G, HIGH);
-    digitalWrite(PIN_PIEPER, LOW);
   } else {
     if (millis() - led_timer > 1000) {
       led_timer = millis();
@@ -220,16 +232,15 @@ void LED_Controler() {
     if (millis() - led_timer > 500) {
       digitalWrite(PIN_LED_R, LOW);
       digitalWrite(PIN_LED_G, LOW);
-      digitalWrite(PIN_PIEPER, LOW);
     } else {
       digitalWrite(PIN_LED_R, LOW);
       digitalWrite(PIN_LED_G, HIGH);
-      digitalWrite(PIN_PIEPER, LOW);
     }
   }
 }
 
 void KnopfPressed() {
+  tone(PIN_PIEPER, 523, 100);
   bool verbunden = false;
   bool scharf = false;
   for (int i = 0; i < 8; i++) {
@@ -243,19 +254,19 @@ void KnopfPressed() {
   if (alarm) {
     for (int i = 0; i < 8; i++) {
       if (connected[i] == 5) {
-        FunkSerial.print("!" + String(i+1) + "|off");
+        FunkSerial.print("!" + String(i + 1) + "|off");
       }
     }
   } else if (verbunden) {
     for (int i = 0; i < 8; i++) {
       if (connected[i] == 1 || connected[i] == 3) {
-        FunkSerial.print("!" + String(i+1) + "|an");
+        FunkSerial.print("!" + String(i + 1) + "|an");
       }
     }
   } else if (scharf) {
     for (int i = 0; i < 8; i++) {
       if (connected[i] == 2 || connected[i] == 4) {
-        FunkSerial.print("!" + String(i+1) + "|aus");
+        FunkSerial.print("!" + String(i + 1) + "|aus");
       }
     }
   }
