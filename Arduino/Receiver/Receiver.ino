@@ -1,11 +1,12 @@
 #include "SoftwareSerial.h"
 
 #define PIN_KNOPF 3
-#define PIN_RX 5
+#define PIN_RX 7
 #define PIN_TX 6
-#define PIN_LED_R 8
-#define PIN_LED_G 9
-#define PIN_PIEPER 11
+#define PIN_LED_R 4
+#define PIN_LED_G 5
+#define PIN_LED_B 9
+#define PIN_PIEPER 10
 
 SoftwareSerial FunkSerial(PIN_RX, PIN_TX);
 String BT_Input;
@@ -24,6 +25,7 @@ unsigned long sendAlarm_timer = 0;
 void setup() {
   Serial.begin(9600);  // -> Bluetooth
   FunkSerial.begin(2400);
+  pinMode(8, INPUT);
   pinMode(PIN_PIEPER, OUTPUT);
   pinMode(PIN_LED_R, OUTPUT);
   pinMode(PIN_LED_G, OUTPUT);
